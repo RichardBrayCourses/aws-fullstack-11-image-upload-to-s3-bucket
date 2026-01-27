@@ -1,0 +1,28 @@
+{
+  "name": "@root/api",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/local.ts",
+    "build": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf node_modules cdk.out"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ssm": "3.972.0",
+    "@root/db-utils": "workspace:*",
+    "@vendia/serverless-express": "^4.12.6",
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.159",
+    "@types/express": "^5.0.0",
+    "@types/node": "^25.0.3",
+    "@types/cors": "^2.8.17",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

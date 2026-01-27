@@ -1,0 +1,26 @@
+{
+  "name": "root",
+  "version": "1.0.0",
+  "scripts": {
+    "bootstrap-up": "pnpm -C deployment/scripts run bootstrap-up",
+    "bootstrap-down": "pnpm -C deployment/scripts run bootstrap-down",
+    "deploy-all": "pnpm deploy-rds && pnpm migrate-database && pnpm deploy-cognito &&  pnpm deploy-api-server && pnpm deploy-ui-cloudfront && pnpm deploy-ui ",
+    "destroy-all": "pnpm destroy-ui && pnpm destroy-ui-cloudfront &&  pnpm destroy-api-server && pnpm destroy-cognito &&  pnpm destroy-rds",
+    "deploy-rds": "pnpm -F @root/deployment run deploy-rds",
+    "destroy-rds": "pnpm -F @root/deployment run destroy-rds",
+    "deploy-cognito": "pnpm -F @root/deployment run deploy-cognito",
+    "destroy-cognito": "pnpm -F @root/deployment run destroy-cognito",
+    "deploy-api-server": "pnpm -F @root/deployment run deploy-api-server",
+    "destroy-api-server": "pnpm -F @root/deployment run destroy-api-server",
+    "deploy-ui-cloudfront": "pnpm -F @root/deployment run deploy-ui-cloudfront",
+    "destroy-ui-cloudfront": "pnpm -F @root/deployment run destroy-ui-cloudfront",
+    "deploy-ui": "pnpm -F @root/ui run build && pnpm -F @root/deployment run deploy-ui",
+    "destroy-ui": "pnpm -F @root/deployment run destroy-ui",
+    "migrate-database": "pnpm -F @root/deployment run migrate-database",
+    "reset-database": "pnpm -F @root/deployment run reset-database",
+    "dev-ui": "pnpm -F @root/ui dev",
+    "dev-api": "pnpm -F @root/api dev",
+    "type-check": "pnpm -r type-check",
+    "clean": "pnpm -r clean && rm -rf node_modules"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@root/deployment",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "deploy-cognito": "cdk deploy system-cognito --require-approval never --app 'tsx ./src/bin/cognito.ts'",
+    "destroy-cognito": "cdk destroy system-cognito system-cognito-post-confirmation --force --require-approval never --app 'tsx ./src/bin/cognito.ts'",
+    "deploy-ui-cloudfront": "cdk deploy system-ui-cloudfront --require-approval never --app 'tsx ./src/bin/ui-cloudfront.ts'",
+    "destroy-ui-cloudfront": "cdk destroy system-ui-cloudfront --force --require-approval never --app 'tsx ./src/bin/ui-cloudfront.ts'",
+    "deploy-api-server": "cdk deploy system-api-server --require-approval never --app 'tsx ./src/bin/api.ts'",
+    "destroy-api-server": "cdk destroy system-api-server --force --require-approval never --app 'tsx ./src/bin/api.ts'",
+    "deploy-ui": "cdk deploy system-ui-bucket --require-approval never --app 'tsx ./src/bin/ui-bucket.ts'",
+    "destroy-ui": "cdk destroy system-ui-bucket --force --require-approval never --app 'tsx ./src/bin/ui-bucket.ts'",
+    "deploy-rds": "cdk deploy system-rds --require-approval never --app 'tsx ./src/bin/rds.ts'",
+    "destroy-rds": "cdk destroy system-rds --force --require-approval never --app 'tsx ./src/bin/rds.ts'",
+    "migrate-database": "tsx ./src/bin/migrate-database.ts",
+    "reset-database": "tsx ./src/bin/migrate-database.ts reset",
+    "clean": "rm -rf node_modules cdk.out",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.235.1",
+    "aws-lambda": "1.0.7",
+    "constructs": "10.4.5",
+    "@root/db-utils": "workspace:*",
+    "dotenv": "17.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "25.0.3",
+    "@types/aws-lambda": "8.10.160",
+    "@types/pg": "^8.15.4",
+    "aws-cdk": "2.1101.0",
+    "esbuild": "^0.24.0",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
+  }
+}

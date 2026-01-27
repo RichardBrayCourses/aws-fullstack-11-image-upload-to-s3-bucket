@@ -1,0 +1,9 @@
+packages:
+  - api
+  - ui
+  - deployment
+  - shared/*
+
+onlyBuiltDependencies:
+  - aws-sdk
+  - esbuild
