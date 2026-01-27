@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-
-const { getCurrentInvoke } = require("@vendia/serverless-express");
+import { getCurrentInvoke } from "@vendia/serverless-express";
 
 export interface AuthUser {
   sub: string;
