@@ -62,6 +62,9 @@ Update the values in the files as follows
 # cloudfront bucket name : must be unique across the whole of AWS
 CDK_UI_BUCKETNAME=rbt-uptickart-ui-bucket
 
+# images bucket name : must be unique across the whole of AWS
+CDK_IMAGES_BUCKETNAME=rbt-uptickart-images-bucket
+
 # System Name : can be anything
 CDK_UPTICK_SYSTEM_NAME=uptickart
 

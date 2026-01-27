@@ -178,6 +178,12 @@ export class CognitoStack extends Stack {
       description: "Cognito Client ID",
     });
 
+    new StringParameter(this, "cognito-user-pool-id-parameter", {
+      parameterName: "/cognito/user-pool-id",
+      stringValue: this.userPool.userPoolId,
+      description: "Cognito User Pool ID",
+    });
+
     new CfnOutput(this, "cognito-domain-output", { value: cognitoDomainUrl });
     new CfnOutput(this, "cognito-client-id-output", { value: clientId });
   }

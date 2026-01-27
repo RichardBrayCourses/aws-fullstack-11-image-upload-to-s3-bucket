@@ -163,6 +163,37 @@ class ApiClient {
 
     return response.user;
   }
+
+  async getPresignedUrl(imageName: string): Promise<{
+    success: boolean;
+    presignedUrl?: string;
+    imageId?: number;
+    uuidFilename?: string;
+    message?: string;
+    error?: string;
+  }> {
+    return this.request(`/v1/images/presigned-url`, {
+      method: "POST",
+      body: JSON.stringify({ imageName }),
+    });
+  }
+
+  async uploadToPresignedUrl(
+    presignedUrl: string,
+    file: File,
+  ): Promise<void> {
+    const response = await fetch(presignedUrl, {
+      method: "PUT",
+      body: file,
+      headers: {
+        "Content-Type": file.type,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`);
+    }
+  }
 }
 
 // Export a singleton instance

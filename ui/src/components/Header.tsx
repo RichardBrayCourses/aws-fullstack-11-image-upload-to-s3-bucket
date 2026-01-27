@@ -67,8 +67,16 @@ export default ({ searchQuery, onSearchQueryChange }: HeaderProps) => {
             >
               🎨
             </Link>
-
-            {/* Removed Profile from the top nav */}
+            <Link
+              to="/upload"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                location.pathname === "/upload"
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              }`}
+            >
+              Upload
+            </Link>
           </nav>
           <ThemeToggle />
 

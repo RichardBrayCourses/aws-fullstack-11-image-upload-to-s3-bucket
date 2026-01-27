@@ -16,7 +16,7 @@ import {
   LambdaIntegration,
   Cors,
 } from "aws-cdk-lib/aws-apigateway";
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import {
   HostedZone,
   ARecord,
@@ -28,6 +28,20 @@ import {
   Certificate,
   CertificateValidation,
 } from "aws-cdk-lib/aws-certificatemanager";
+import {
+  Bucket,
+  BlockPublicAccess,
+  CorsRule,
+  HttpMethods,
+} from "aws-cdk-lib/aws-s3";
+import {
+  Distribution,
+  ViewerProtocolPolicy,
+  CachePolicy,
+  OriginAccessControl,
+} from "aws-cdk-lib/aws-cloudfront";
+import { S3BucketOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { join } from "path";
 
 interface ApiStackProps extends StackProps {
@@ -36,17 +50,18 @@ interface ApiStackProps extends StackProps {
   hostedZoneName?: string;
   apiSubdomain?: string;
   databaseName?: string;
+  imagesBucketName?: string;
 }
 
 export class ApiStack extends Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const { domainName, hostedZoneId, hostedZoneName, apiSubdomain, databaseName } = props;
+    const { domainName, hostedZoneId, hostedZoneName, apiSubdomain, databaseName, imagesBucketName } = props;
 
-    if (!hostedZoneName || !hostedZoneId || !domainName || !apiSubdomain) {
+    if (!hostedZoneName || !hostedZoneId || !domainName || !apiSubdomain || !imagesBucketName) {
       throw new Error(
-        "Unexpected missing hostedZoneName || hostedZoneId || domainName || apiSubdomain",
+        "Unexpected missing hostedZoneName || hostedZoneId || domainName || apiSubdomain || imagesBucketName",
       );
     }
 
@@ -64,27 +79,94 @@ export class ApiStack extends Stack {
     });
     certificate.applyRemovalPolicy(RemovalPolicy.RETAIN);
 
+    const imagesBucket = new Bucket(this, "ImagesBucket", {
+      bucketName: imagesBucketName,
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      cors: [
+        {
+          allowedMethods: [
+            HttpMethods.GET,
+            HttpMethods.POST,
+            HttpMethods.PUT,
+            HttpMethods.DELETE,
+            HttpMethods.HEAD,
+          ],
+          allowedOrigins: ["*"],
+          allowedHeaders: ["*"],
+          exposedHeaders: ["ETag", "x-amz-version-id"],
+          maxAge: 3000,
+        },
+      ] as CorsRule[],
+    });
+
+    const oac = new OriginAccessControl(this, "ImagesBucketOAC", {
+      originAccessControlName: `${this.stackName}-images-oac`,
+      description: "OAC for images bucket",
+    });
+
+    const imagesDistribution = new Distribution(this, "ImagesDistribution", {
+      defaultBehavior: {
+        origin: new S3BucketOrigin(imagesBucket, {
+          originAccessControl: oac,
+        }),
+        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+      },
+    });
+
+    imagesBucket.addToResourcePolicy(
+      new PolicyStatement({
+        sid: "AllowCloudFrontServicePrincipal",
+        effect: "Allow",
+        principals: [new ServicePrincipal("cloudfront.amazonaws.com")],
+        actions: ["s3:GetObject"],
+        resources: [`${imagesBucket.bucketArn}/*`],
+        conditions: {
+          StringEquals: {
+            "AWS:SourceArn": `arn:aws:cloudfront::${this.account}:distribution/${imagesDistribution.distributionId}`,
+          },
+        },
+      })
+    );
+
+    new StringParameter(this, "S3BucketNameParam", {
+      parameterName: "/images/bucket-name",
+      stringValue: imagesBucket.bucketName,
+      description: "S3 bucket name for images",
+    });
+
+    new StringParameter(this, "CloudFrontDomainParam", {
+      parameterName: "/images/cloudfront-domain",
+      stringValue: imagesDistribution.distributionDomainName,
+      description: "CloudFront distribution domain for images",
+    });
+
     const lambdaFunction = new NodejsFunction(this, "ImageServiceFunction", {
       entry: join(__dirname, "..", "..", "..", "api", "src", "index.ts"),
       handler: "handler",
       runtime: Runtime.NODEJS_LATEST,
       timeout: Duration.seconds(30),
       memorySize: 256,
-      environment: databaseName
-        ? {
-            CDK_POSTRGRESS_DATABASE_NAME: databaseName,
-          }
-        : undefined,
+      environment: {
+        ...(databaseName ? { CDK_POSTRGRESS_DATABASE_NAME: databaseName } : {}),
+        S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: imagesDistribution.distributionDomainName,
+        AWS_REGION: this.region,
+      },
       bundling: {
         nodeModules: [
           "pg",
           "@aws-sdk/client-secrets-manager",
           "@aws-sdk/client-ssm",
+          "@aws-sdk/client-s3",
+          "@aws-sdk/s3-request-presigner",
+          "uuid",
         ],
       },
     });
 
-    // SSM permissions for Cognito config
     lambdaFunction.addToRolePolicy(
       new PolicyStatement({
         actions: ["ssm:GetParameter"],
@@ -94,7 +176,6 @@ export class ApiStack extends Stack {
       }),
     );
 
-    // SSM permissions for RDS config
     lambdaFunction.addToRolePolicy(
       new PolicyStatement({
         actions: ["ssm:GetParameter", "ssm:GetParameters"],
@@ -104,13 +185,15 @@ export class ApiStack extends Stack {
       }),
     );
 
-    // Grant permissions to read secrets (secret ARN will be loaded from SSM by db-utils)
     lambdaFunction.addToRolePolicy(
       new PolicyStatement({
         actions: ["secretsmanager:GetSecretValue"],
-        resources: ["*"], // ARN will be determined at runtime from SSM
+        resources: ["*"],
       }),
     );
+
+    imagesBucket.grantPut(lambdaFunction);
+    imagesBucket.grantRead(lambdaFunction);
 
     const api = new RestApi(this, "ApiServer", {
       restApiName: "Image Service API",

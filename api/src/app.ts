@@ -7,6 +7,7 @@ import express, {
 import cors from "cors";
 import configRoutes from "./routes/configRoutes";
 import userRoutes from "./routes/userRoutes";
+import imageRoutes from "./routes/imageRoutes";
 
 const app: Application = express();
 
@@ -28,6 +29,7 @@ app.get("/health", (_req: Request, res: Response) => {
 // All v1 routes
 app.use("/v1", configRoutes);
 app.use("/v1", userRoutes);
+app.use("/v1", imageRoutes);
 
 // Error handler middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

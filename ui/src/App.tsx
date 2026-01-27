@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Header from "@/components/Header";
 import Home from "@/pages/Home";
 import Profile from "@/pages/Profile";
+import Upload from "@/pages/Upload";
 import Callback from "./pages/Callback";
 
 export default () => {
@@ -15,6 +16,7 @@ export default () => {
         <Routes>
           <Route path="/" element={<Home searchQuery={searchQuery} />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/upload" element={<Upload />} />
           <Route path="/callback" element={<Callback />} />
 
           <Route
