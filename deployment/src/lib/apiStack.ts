@@ -75,12 +75,6 @@ export class ApiStack extends Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     });
 
-    new StringParameter(this, "S3BucketNameParam", {
-      parameterName: "/images/bucket-name",
-      stringValue: imagesBucket.bucketName,
-      description: "S3 bucket name for images",
-    });
-
     const lambdaFunction = new NodejsFunction(this, "ImageServiceFunction", {
       entry: join(__dirname, "..", "..", "..", "api", "src", "index.ts"),
       handler: "handler",
