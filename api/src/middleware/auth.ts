@@ -25,9 +25,14 @@ function parseGroups(raw: Claims["cognito:groups"]): string[] {
   return [];
 }
 
-export async function attachAuth(req: Request, _res: Response, next: NextFunction) {
+export async function attachAuth(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) {
   const invoke = getCurrentInvoke?.();
-  const claims: Claims | undefined = invoke?.event?.requestContext?.authorizer?.claims;
+  const claims: Claims | undefined =
+    invoke?.event?.requestContext?.authorizer?.claims;
 
   if (claims?.sub) {
     (req as any).auth = {
@@ -42,7 +47,9 @@ export async function attachAuth(req: Request, _res: Response, next: NextFunctio
   if (authHeader?.startsWith("Bearer ")) {
     try {
       const token = authHeader.substring(7);
-      const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
+      const payload = JSON.parse(
+        Buffer.from(token.split(".")[1], "base64").toString(),
+      );
       if (payload.sub) {
         (req as any).auth = {
           sub: payload.sub,
@@ -56,22 +63,4 @@ export async function attachAuth(req: Request, _res: Response, next: NextFunctio
   }
 
   next();
-}
-
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const auth = (req as any).auth as AuthUser | undefined;
-  if (!auth?.sub) {
-    return res.status(401).json({ error: "Authentication required" });
-  }
-  return next();
-}
-
-export function requireGroup(groupName: string) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const auth = (req as any).auth as AuthUser | undefined;
-    if (!auth?.groups?.includes(groupName)) {
-      return res.status(403).json({ error: "Insufficient permissions" });
-    }
-    return next();
-  };
 }
