@@ -6,7 +6,7 @@ export interface UserData {
   nickname: string | null;
 }
 
-const DB_NAME = process.env.CDK_POSTRGRESS_DATABASE_NAME || "postgres";
+const DB_NAME = process.env.POSTRGRESS_DATABASE_NAME || "postgres";
 
 export async function getUserBySub(sub: string): Promise<UserData | null> {
   const client = await createDbClient(DB_NAME);

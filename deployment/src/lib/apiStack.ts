@@ -16,7 +16,7 @@ import {
   LambdaIntegration,
   Cors,
 } from "aws-cdk-lib/aws-apigateway";
-import { PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import {
   HostedZone,
   ARecord,
@@ -28,39 +28,31 @@ import {
   Certificate,
   CertificateValidation,
 } from "aws-cdk-lib/aws-certificatemanager";
-import {
-  Bucket,
-  BlockPublicAccess,
-} from "aws-cdk-lib/aws-s3";
-import {
-  Distribution,
-  ViewerProtocolPolicy,
-  CachePolicy,
-} from "aws-cdk-lib/aws-cloudfront";
-import { S3BucketOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
+import { Bucket, BlockPublicAccess } from "aws-cdk-lib/aws-s3";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { join } from "path";
 
 interface ApiStackProps extends StackProps {
-  domainName?: string;
-  hostedZoneId?: string;
-  hostedZoneName?: string;
-  apiSubdomain?: string;
-  databaseName?: string;
-  imagesBucketName?: string;
+  domainName: string;
+  hostedZoneId: string;
+  hostedZoneName: string;
+  apiSubdomain: string;
+  databaseName: string;
+  bucketName: string;
 }
 
 export class ApiStack extends Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const { domainName, hostedZoneId, hostedZoneName, apiSubdomain, databaseName, imagesBucketName } = props;
-
-    if (!hostedZoneName || !hostedZoneId || !domainName || !apiSubdomain || !imagesBucketName) {
-      throw new Error(
-        "Unexpected missing hostedZoneName || hostedZoneId || domainName || apiSubdomain || imagesBucketName",
-      );
-    }
+    const {
+      domainName,
+      hostedZoneId,
+      hostedZoneName,
+      apiSubdomain,
+      databaseName,
+      bucketName,
+    } = props;
 
     const apiDomainName = `${apiSubdomain}.${domainName}`;
 
@@ -77,18 +69,10 @@ export class ApiStack extends Stack {
     certificate.applyRemovalPolicy(RemovalPolicy.RETAIN);
 
     const imagesBucket = new Bucket(this, "ImagesBucket", {
-      bucketName: imagesBucketName,
+      bucketName,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-    });
-
-    const imagesDistribution = new Distribution(this, "ImagesDistribution", {
-      defaultBehavior: {
-        origin: S3BucketOrigin.withOriginAccessControl(imagesBucket),
-        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: CachePolicy.CACHING_OPTIMIZED,
-      },
     });
 
     new StringParameter(this, "S3BucketNameParam", {
@@ -97,23 +81,13 @@ export class ApiStack extends Stack {
       description: "S3 bucket name for images",
     });
 
-    new StringParameter(this, "CloudFrontDomainParam", {
-      parameterName: "/images/cloudfront-domain",
-      stringValue: imagesDistribution.distributionDomainName,
-      description: "CloudFront distribution domain for images",
-    });
-
     const lambdaFunction = new NodejsFunction(this, "ImageServiceFunction", {
       entry: join(__dirname, "..", "..", "..", "api", "src", "index.ts"),
       handler: "handler",
       runtime: Runtime.NODEJS_LATEST,
-      timeout: Duration.seconds(30),
-      memorySize: 256,
       environment: {
-        ...(databaseName ? { CDK_POSTRGRESS_DATABASE_NAME: databaseName } : {}),
-        S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: imagesDistribution.distributionDomainName,
-        AWS_REGION: this.region,
+        POSTRGRESS_DATABASE_NAME: databaseName,
+        IMAGES_BUCKET_NAME: imagesBucket.bucketName,
       },
       bundling: {
         nodeModules: [

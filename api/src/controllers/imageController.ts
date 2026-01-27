@@ -11,9 +11,9 @@ const s3Client = new S3Client({
   region: process.env.AWS_REGION || "eu-west-2",
 });
 
-const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
-if (!S3_BUCKET_NAME) {
-  throw new Error("S3_BUCKET_NAME environment variable is required");
+const IMAGES_BUCKET_NAME = process.env.IMAGES_BUCKET_NAME;
+if (!IMAGES_BUCKET_NAME) {
+  throw new Error("IMAGES_BUCKET_NAME environment variable is required");
 }
 
 const presignedUrlSchema = z.object({
@@ -37,11 +37,11 @@ export async function getPresignedUrl(req: Request, res: Response) {
     const presignedUrl = await getSignedUrl(
       s3Client,
       new PutObjectCommand({
-        Bucket: S3_BUCKET_NAME,
+        Bucket: IMAGES_BUCKET_NAME,
         Key: uuidFilename,
         ContentType: "image/*",
       }),
-      { expiresIn: 900 }
+      { expiresIn: 900 },
     );
 
     const imageRecord = await insertImage({
