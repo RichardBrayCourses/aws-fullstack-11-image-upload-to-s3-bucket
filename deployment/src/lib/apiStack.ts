@@ -31,14 +31,11 @@ import {
 import {
   Bucket,
   BlockPublicAccess,
-  CorsRule,
-  HttpMethods,
 } from "aws-cdk-lib/aws-s3";
 import {
   Distribution,
   ViewerProtocolPolicy,
   CachePolicy,
-  OriginAccessControl,
 } from "aws-cdk-lib/aws-cloudfront";
 import { S3BucketOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
@@ -84,52 +81,15 @@ export class ApiStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      cors: [
-        {
-          allowedMethods: [
-            HttpMethods.GET,
-            HttpMethods.POST,
-            HttpMethods.PUT,
-            HttpMethods.DELETE,
-            HttpMethods.HEAD,
-          ],
-          allowedOrigins: ["*"],
-          allowedHeaders: ["*"],
-          exposedHeaders: ["ETag", "x-amz-version-id"],
-          maxAge: 3000,
-        },
-      ] as CorsRule[],
-    });
-
-    const oac = new OriginAccessControl(this, "ImagesBucketOAC", {
-      originAccessControlName: `${this.stackName}-images-oac`,
-      description: "OAC for images bucket",
     });
 
     const imagesDistribution = new Distribution(this, "ImagesDistribution", {
       defaultBehavior: {
-        origin: new S3BucketOrigin(imagesBucket, {
-          originAccessControl: oac,
-        }),
+        origin: S3BucketOrigin.withOriginAccessControl(imagesBucket),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: CachePolicy.CACHING_OPTIMIZED,
       },
     });
-
-    imagesBucket.addToResourcePolicy(
-      new PolicyStatement({
-        sid: "AllowCloudFrontServicePrincipal",
-        effect: "Allow",
-        principals: [new ServicePrincipal("cloudfront.amazonaws.com")],
-        actions: ["s3:GetObject"],
-        resources: [`${imagesBucket.bucketArn}/*`],
-        conditions: {
-          StringEquals: {
-            "AWS:SourceArn": `arn:aws:cloudfront::${this.account}:distribution/${imagesDistribution.distributionId}`,
-          },
-        },
-      })
-    );
 
     new StringParameter(this, "S3BucketNameParam", {
       parameterName: "/images/bucket-name",
