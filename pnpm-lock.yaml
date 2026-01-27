@@ -25,9 +25,6 @@ importers:
       '@vendia/serverless-express':
         specifier: ^4.12.6
         version: 4.12.6
-      aws-jwt-verify:
-        specifier: ^4.0.1
-        version: 4.0.1
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -1887,10 +1884,6 @@ packages:
     resolution: {integrity: sha512-5EP+t13OFzE0SaK+KY/di9ZcXQYwnhDtM8kqEMjEvqhj+K3eqtV0DDI1YjthOoVMBAHgZK9juKPqxfwwRprBPQ==}
     engines: {node: '>= 18.0.0'}
     hasBin: true
-
-  aws-jwt-verify@4.0.1:
-    resolution: {integrity: sha512-kzvi71eD3w/mCpYRUY7cz6DX4bfYihGdI2yV3FYQ2JuZZenqAqDPz0gWj0ew6vlAtdEVBNb7p+Dm2TAIxpVYMA==}
-    engines: {node: '>=14.0.0'}
 
   aws-lambda@1.0.7:
     resolution: {integrity: sha512-9GNFMRrEMG5y3Jvv+V4azWvc+qNWdWLTjDdhf/zgMlz8haaaLWv0xeAIWxz9PuWUBawsVxy0zZotjCdR3Xq+2w==}
@@ -5286,8 +5279,6 @@ snapshots:
   aws-cdk@2.1101.0:
     optionalDependencies:
       fsevents: 2.3.2
-
-  aws-jwt-verify@4.0.1: {}
 
   aws-lambda@1.0.7:
     dependencies:
