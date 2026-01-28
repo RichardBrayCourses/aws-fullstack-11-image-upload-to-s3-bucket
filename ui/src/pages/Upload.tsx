@@ -9,6 +9,7 @@ import { sessionStorage } from "@/utils/sessionStorage";
 export default () => {
   const { user } = useAuth();
   const [imageName, setImageName] = useState("");
+  const [imageDescription, setImageDescription] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
@@ -33,6 +34,10 @@ export default () => {
       setUploadError("Image name must be 40 characters or less");
       return;
     }
+    if (imageDescription.length > 120) {
+      setUploadError("Image description must be 120 characters or less");
+      return;
+    }
 
     setIsUploading(true);
     setUploadMessage("");
@@ -44,7 +49,10 @@ export default () => {
         api.setAccessToken(token);
       }
 
-      const presignedResponse = await api.getPresignedUrl(imageName.trim());
+      const presignedResponse = await api.getPresignedUrl(
+        imageName.trim(),
+        imageDescription.trim() || null,
+      );
       if (!presignedResponse.success || !presignedResponse.presignedUrl) {
         throw new Error(presignedResponse.message || "Failed to get upload URL");
       }
@@ -56,6 +64,7 @@ export default () => {
 
       setUploadMessage("Upload successful!");
       setImageName("");
+      setImageDescription("");
       setSelectedFile(null);
       const fileInput = document.getElementById(
         "file-input"
@@ -112,6 +121,26 @@ export default () => {
             />
             <div className="mt-1 text-right text-xs text-muted-foreground">
               {imageName.length}/40
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="image-description"
+              className="text-sm font-medium block mb-2"
+            >
+              Image Description (optional)
+            </label>
+            <Input
+              id="image-description"
+              value={imageDescription}
+              onChange={(e) => setImageDescription(e.target.value)}
+              placeholder="Enter a short description (max 120 characters)"
+              maxLength={120}
+              disabled={isUploading}
+            />
+            <div className="mt-1 text-right text-xs text-muted-foreground">
+              {imageDescription.length}/120
             </div>
           </div>
 

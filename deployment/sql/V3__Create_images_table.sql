@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS images (
     sub VARCHAR(255) NOT NULL,
     uuid_filename VARCHAR(36) NOT NULL UNIQUE,
     image_name VARCHAR(40) NOT NULL,
+    image_description VARCHAR(120) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_images_sub 
         FOREIGN KEY (sub) 

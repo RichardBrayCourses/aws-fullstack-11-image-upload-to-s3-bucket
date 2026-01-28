@@ -26,6 +26,12 @@ const presignedUrlSchema = z.object({
     .trim()
     .min(1, "Image name is required")
     .max(40, "Image name must be 40 characters or less"),
+  imageDescription: z
+    .string()
+    .max(120, "Image description must be 120 characters or less") // maximum length of 120 characters
+    .nullable() // allows the value to be null
+    .optional() // allows the field to be missing (undefined)
+    .transform((val): string | null => val ?? null), // converts undefined to null, so we always get string | null (never undefined)
 });
 
 export async function getPresignedUrl(req: Request, res: Response) {
@@ -35,7 +41,7 @@ export async function getPresignedUrl(req: Request, res: Response) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { imageName } = presignedUrlSchema.parse(req.body);
+    const { imageName, imageDescription } = presignedUrlSchema.parse(req.body);
     const uuidFilename = uuidv4();
 
     const presignedUrl = await getSignedUrl(
@@ -54,6 +60,7 @@ export async function getPresignedUrl(req: Request, res: Response) {
       sub: auth.sub,
       uuidFilename,
       imageName: imageName.trim(),
+      imageDescription: imageDescription?.trim(),
     });
 
     if (!imageRecord) {

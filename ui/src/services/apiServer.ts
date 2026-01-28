@@ -164,7 +164,10 @@ class ApiClient {
     return response.user;
   }
 
-  async getPresignedUrl(imageName: string): Promise<{
+  async getPresignedUrl(
+    imageName: string,
+    imageDescription?: string | null,
+  ): Promise<{
     success: boolean;
     presignedUrl?: string;
     imageId?: number;
@@ -174,7 +177,10 @@ class ApiClient {
   }> {
     return this.request(`/v1/images/presigned-url`, {
       method: "POST",
-      body: JSON.stringify({ imageName }),
+      body: JSON.stringify({
+        imageName,
+        imageDescription: imageDescription ?? null,
+      }),
     });
   }
 
