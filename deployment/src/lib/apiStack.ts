@@ -34,7 +34,6 @@ import {
   CorsRule,
   HttpMethods,
 } from "aws-cdk-lib/aws-s3";
-import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { join } from "path";
 
 interface ApiStackProps extends StackProps {
