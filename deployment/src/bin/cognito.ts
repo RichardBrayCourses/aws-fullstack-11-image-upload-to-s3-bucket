@@ -9,10 +9,10 @@ const app = new cdk.App();
 if (
   !process.env.CDK_UPTICK_DOMAIN_NAME ||
   !process.env.CDK_UPTICK_SYSTEM_NAME ||
-  !process.env.CDK_POSTRGRESS_DATABASE_NAME
+  !process.env.CDK_DATABASE_NAME
 )
   throw new Error(
-    "Error: .env file must contain CDK_UPTICK_DOMAIN_NAME, CDK_UPTICK_SYSTEM_NAME, CDK_POSTRGRESS_DATABASE_NAME",
+    "Error: .env file must contain CDK_UPTICK_DOMAIN_NAME, CDK_UPTICK_SYSTEM_NAME, CDK_DATABASE_NAME",
   );
 
 const postConfirmationStack = new CognitoPostConfirmationStack(
@@ -20,7 +20,7 @@ const postConfirmationStack = new CognitoPostConfirmationStack(
   "system-cognito-post-confirmation",
   {
     systemName: process.env.CDK_UPTICK_SYSTEM_NAME,
-    databaseName: process.env.CDK_POSTRGRESS_DATABASE_NAME,
+    databaseName: process.env.CDK_DATABASE_NAME,
   },
 );
 

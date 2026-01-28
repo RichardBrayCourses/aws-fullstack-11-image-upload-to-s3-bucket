@@ -15,22 +15,20 @@ async function main() {
   const args = process.argv.slice(2);
   const reset = args.includes("reset");
 
-  if (!process.env.CDK_POSTRGRESS_DATABASE_NAME)
-    throw new Error(
-      "Error: .env file must contain CDK_POSTRGRESS_DATABASE_NAME",
-    );
+  if (!process.env.CDK_DATABASE_NAME)
+    throw new Error("Error: .env file must contain CDK_DATABASE_NAME");
 
   if (process.env.PROFILE) {
     process.env.AWS_PROFILE = process.env.PROFILE;
   }
 
   // Ensure the database exists
-  await ensureDatabase(process.env.CDK_POSTRGRESS_DATABASE_NAME);
+  await ensureDatabase(process.env.CDK_DATABASE_NAME);
 
   const endpoint = await getRdsEndpoint();
   const credentials = await getRdsCredentials();
 
-  const jdbcUrl = `jdbc:postgresql://${endpoint}:5432/${process.env.CDK_POSTRGRESS_DATABASE_NAME}?sslmode=require`;
+  const jdbcUrl = `jdbc:postgresql://${endpoint}:5432/${process.env.CDK_DATABASE_NAME}?sslmode=require`;
   // Go up two levels from src/bin to get to deployment root
   const deploymentDir = join(__dirname, "..", "..");
 

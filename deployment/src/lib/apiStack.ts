@@ -28,7 +28,12 @@ import {
   Certificate,
   CertificateValidation,
 } from "aws-cdk-lib/aws-certificatemanager";
-import { Bucket, BlockPublicAccess } from "aws-cdk-lib/aws-s3";
+import {
+  Bucket,
+  BlockPublicAccess,
+  CorsRule,
+  HttpMethods,
+} from "aws-cdk-lib/aws-s3";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { join } from "path";
 
@@ -73,14 +78,34 @@ export class ApiStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      cors: [
+        {
+          allowedMethods: [
+            HttpMethods.GET,
+            HttpMethods.POST,
+            HttpMethods.PUT,
+            HttpMethods.DELETE,
+            HttpMethods.HEAD,
+          ],
+          allowedOrigins: [
+            "http://localhost:3001",
+            "https://*.cloudfront.net",
+            "https://*.uptickart.com",
+          ],
+          allowedHeaders: ["*"],
+          exposedHeaders: ["ETag", "x-amz-version-id"],
+          maxAge: 3000,
+        },
+      ] as CorsRule[],
     });
 
-    const lambdaFunction = new NodejsFunction(this, "ImageServiceFunction", {
+    const lambdaFunction = new NodejsFunction(this, "ApiServiceFunction", {
       entry: join(__dirname, "..", "..", "..", "api", "src", "index.ts"),
       handler: "handler",
       runtime: Runtime.NODEJS_LATEST,
+      timeout: Duration.seconds(30), // Aurora database can take 15 seconds to spin up from cold, so our Lambda needs longer than that.
       environment: {
-        POSTRGRESS_DATABASE_NAME: databaseName,
+        DATABASE_NAME: databaseName,
         IMAGES_BUCKET_NAME: imagesBucket.bucketName,
       },
       bundling: {

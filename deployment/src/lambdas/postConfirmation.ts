@@ -7,13 +7,11 @@ interface RegisteredUser {
 }
 
 async function insertUser(userData: RegisteredUser): Promise<void> {
-  if (!process.env.CDK_POSTRGRESS_DATABASE_NAME)
-    throw new Error(
-      "Error: CDK_POSTRGRESS_DATABASE_NAME environment variable is not set",
-    );
+  if (!process.env.CDK_DATABASE_NAME)
+    throw new Error("Error: CDK_DATABASE_NAME environment variable is not set");
 
   // Use SSL for RDS connections (required by AWS RDS)
-  const client = await createDbClient(process.env.CDK_POSTRGRESS_DATABASE_NAME);
+  const client = await createDbClient(process.env.CDK_DATABASE_NAME);
 
   try {
     await client.query(

@@ -1,4 +1,4 @@
-import { CfnOutput, Stack, StackProps } from "aws-cdk-lib";
+import { CfnOutput, Duration, Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
@@ -28,9 +28,10 @@ export class CognitoPostConfirmationStack extends Stack {
       entry: join(__dirname, "..", "lambdas", "postConfirmation.ts"),
       handler: "handler",
       functionName: uniquePrefix,
+      timeout: Duration.seconds(30), // Aurora database can take 15 seconds to spin up from cold, so our Lambda needs longer than that.
       runtime: Runtime.NODEJS_LATEST,
       environment: {
-        CDK_POSTRGRESS_DATABASE_NAME: databaseName,
+        CDK_DATABASE_NAME: databaseName,
       },
       bundling: {
         nodeModules: [

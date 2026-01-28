@@ -1,4 +1,4 @@
-import { createDbClient } from "@root/db-utils";
+import { Client } from "pg";
 
 export interface UserData {
   sub: string;
@@ -6,10 +6,10 @@ export interface UserData {
   nickname: string | null;
 }
 
-const DB_NAME = process.env.POSTRGRESS_DATABASE_NAME || "postgres";
-
-export async function getUserBySub(sub: string): Promise<UserData | null> {
-  const client = await createDbClient(DB_NAME);
+export async function getUserBySub(
+  client: Client,
+  sub: string,
+): Promise<UserData | null> {
   const result = await client.query(
     `SELECT sub, email, nickname FROM registered_user WHERE sub = $1`,
     [sub],
@@ -18,10 +18,10 @@ export async function getUserBySub(sub: string): Promise<UserData | null> {
 }
 
 export async function updateUserNickname(
+  client: Client,
   sub: string,
   nickname: string | null,
 ): Promise<UserData> {
-  const client = await createDbClient(DB_NAME);
   const result = await client.query(
     `UPDATE registered_user SET nickname = $1 WHERE sub = $2 RETURNING sub, email, nickname`,
     [nickname, sub],

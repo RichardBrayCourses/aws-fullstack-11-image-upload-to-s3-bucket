@@ -6,15 +6,19 @@ import { v4 as uuidv4 } from "uuid";
 import { insertImage } from "../database/imageRepository";
 import type { AuthUser } from "../middleware/auth";
 import { logger } from "../utils/logger";
+import { createDbClient } from "@root/db-utils";
 
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION || "eu-west-2",
-});
+const s3Client = new S3Client();
 
-const IMAGES_BUCKET_NAME = process.env.IMAGES_BUCKET_NAME;
-if (!IMAGES_BUCKET_NAME) {
+if (!process.env.IMAGES_BUCKET_NAME) {
   throw new Error("IMAGES_BUCKET_NAME environment variable is required");
 }
+const IMAGES_BUCKET_NAME = process.env.IMAGES_BUCKET_NAME;
+
+if (!process.env.DATABASE_NAME) {
+  throw new Error("DATABASE_NAME environment variable is required");
+}
+const DATABASE_NAME = process.env.DATABASE_NAME;
 
 const presignedUrlSchema = z.object({
   imageName: z
@@ -44,7 +48,9 @@ export async function getPresignedUrl(req: Request, res: Response) {
       { expiresIn: 900 },
     );
 
-    const imageRecord = await insertImage({
+    const client = await createDbClient(DATABASE_NAME);
+
+    const imageRecord = await insertImage(client, {
       sub: auth.sub,
       uuidFilename,
       imageName: imageName.trim(),

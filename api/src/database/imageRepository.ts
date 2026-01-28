@@ -1,4 +1,4 @@
-import { createDbClient } from "@root/db-utils";
+import { Client } from "pg";
 
 export interface ImageRecord {
   id: number;
@@ -8,14 +8,14 @@ export interface ImageRecord {
   created_at: string;
 }
 
-const DB_NAME = process.env.POSTRGRESS_DATABASE_NAME || "postgres";
-
-export async function insertImage(imageData: {
-  sub: string;
-  uuidFilename: string;
-  imageName: string;
-}): Promise<ImageRecord | null> {
-  const client = await createDbClient(DB_NAME);
+export async function insertImage(
+  client: Client,
+  imageData: {
+    sub: string;
+    uuidFilename: string;
+    imageName: string;
+  },
+): Promise<ImageRecord | null> {
   const result = await client.query(
     `INSERT INTO images (sub, uuid_filename, image_name, created_at) 
      VALUES ($1, $2, $3, NOW()) 
